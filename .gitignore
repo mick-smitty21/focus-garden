@@ -1,0 +1,9 @@
+# .gitignore: files git should never track.
+# Operating system clutter
+Thumbs.db
+desktop.ini
+.DS_Store
+# Editor settings
+.vscode/
+# Saved plant images from testing (keep the repo small)
+focus-garden-*.png

@@ -1,0 +1,12 @@
+/* garden.css: layout and colors for the garden page.
+   Keeps the canvas centered with a calm background. */
+body {
+  font-family: system-ui, sans-serif;
+  background: #F4F1EA;
+  color: #2B2B2B;
+  margin: 0;
+  padding: 16px;
+  text-align: center;
+}
+h1 { font-size: 20px; color: #2E7D32; margin: 0 0 12px 0; }
+#garden-canvas { display: inline-block; }
