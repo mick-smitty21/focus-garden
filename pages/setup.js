@@ -173,6 +173,8 @@ async function startSession() {
     endedAt: null
   };
   await chrome.storage.local.set({ current: current });
+  // Ask the background engine to look at Chrome right away and set the real state.
+  chrome.runtime.sendMessage({ type: "evaluate" });
 
   await chrome.windows.create({
     url: chrome.runtime.getURL("pages/garden.html"),

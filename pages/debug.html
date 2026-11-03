@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<!--
+  debug.html: a plain view of what the tracking engine has recorded.
+  Shows the current state and a live table of segments, so the engine
+  can be tested without the plant. Not part of the normal user flow.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Focus Garden: engine debug</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 16px; color: #2B2B2B; }
+    h1 { font-size: 20px; }
+    table { border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #CCC; padding: 4px 10px; text-align: left; font-size: 14px; }
+    .open-row { font-style: italic; background: #F4F1EA; }
+    .swatch { display: inline-block; width: 10px; height: 10px; margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Engine debug</h1>
+  <div id="status">Loading...</div>
+  <table>
+    <thead>
+      <tr><th>#</th><th>Kind</th><th>Label</th><th>Start</th><th>End</th><th>Seconds</th></tr>
+    </thead>
+    <tbody id="segment-rows"></tbody>
+  </table>
+  <script src="../shared/rules.js"></script>
+  <script src="debug.js"></script>
+</body>
+</html>
