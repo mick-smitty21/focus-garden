@@ -8,7 +8,8 @@ const PLANT_COLORS = {
   skyBottom: "#F1F8E9",
   stem: "#3B7D3A",
   declared: "#6A1B9A",
-  knot: "#6D4C41",
+  knot: "#D7CCC8",       // light bark fill: a growth node, not a dark lump
+  knotRing: "#8D6E63",   // darker bark outline
   leaf: "#66BB6A",
   leafVein: "#2E7D32",
   petal: "#F48FB1",
@@ -27,14 +28,21 @@ const GROW_IN_MS = 1500;          // new leaves and flowers ease in over 1.5 sec
 function collectSegments(session, nowMs) {
   const segments = session.segments.slice(); // .slice() copies a list, like list[:]
   if (session.open && !session.endedAt) {
-    const plannedEnd = session.startedAt + session.plannedSessionMinutes * 60000 / session.timeScale;
-    const end = Math.min(nowMs, plannedEnd);
+    const end = Math.min(nowMs, plannedEndMs(session));
     let kind = session.open.kind;
     // An open detour under 10 seconds may still turn out to be a glance: draw nothing yet.
     if (kind === STATE_DETOUR && end - session.open.start < GRACE_PERIOD_MS) {
       kind = STATE_NEUTRAL;
     }
-    if (end > session.open.start) {
+    // If a declaration has run out but the engine has not noticed yet (it checks
+    // every 30 seconds), draw the time after expiry as a detour, as the engine will.
+    const declaration = session.declaration;
+    if (kind === STATE_DECLARED && declaration && end > declaration.expiresAt) {
+      segments.push({ kind: STATE_DECLARED, start: session.open.start, end: declaration.expiresAt, label: session.open.label });
+      if (end - declaration.expiresAt >= GRACE_PERIOD_MS) {
+        segments.push({ kind: STATE_DETOUR, start: declaration.expiresAt, end: end, label: OUTSIDE_CHROME_LABEL });
+      }
+    } else if (end > session.open.start) {
       segments.push({ kind: kind, start: session.open.start, end: end, label: session.open.label });
     }
   }
@@ -254,8 +262,9 @@ function drawPlant(p, session, nowMs, options) {
   for (const leaf of plant.leaves) {
     drawLeaf(p, shown[leaf.pointIndex], leaf.side, growScale(leaf.bornAt, nowMs, options.animate), scale);
   }
-  p.noStroke();
   p.fill(PLANT_COLORS.knot);
+  p.stroke(PLANT_COLORS.knotRing);
+  p.strokeWeight(2.5 * scale);
   for (const knot of plant.knots) {
     const point = shown[knot.pointIndex];
     p.circle(point.x, point.y, knot.radius * 2 * scale);

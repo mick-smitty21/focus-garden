@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <!--
-  garden.html: the live garden window that sits beside your work.
-  Loads p5.js (local), the shared rules and plant code, then garden.js,
-  which draws the plant and the status lines under it.
+  garden.html: the garden window that sits beside your work.
+  While a session runs it shows the live plant and status ("live view");
+  when the session ends it switches to the summary ("summary view").
 -->
 <html lang="en">
 <head>
@@ -12,7 +12,8 @@
 </head>
 <body>
   <div id="garden-canvas"></div>
-  <div id="info">
+
+  <div id="live-view" class="panel">
     <div class="info-row">
       <span id="task-name"></span>
       <span id="demo-tag" hidden>DEMO MODE 10x</span>
@@ -21,10 +22,41 @@
       <span id="state-words"></span>
       <span id="time-remaining"></span>
     </div>
+    <div id="declaration-status" class="declaration-status" hidden></div>
+    <div id="welcome-back" class="welcome-back" hidden>Welcome back. That time was logged as a detour.</div>
+
+    <!-- <details> is a built-in HTML toggle: click the summary line to open or close it. -->
+    <details id="declare-panel">
+      <summary>Working in another app</summary>
+      <input id="declare-app-input" type="text" placeholder="App (e.g. VS Code)">
+      <input id="declare-purpose-input" type="text" placeholder="What you'll do there (3+ words)">
+      <button id="declare-button">Declare</button>
+      <div id="declare-message" class="declare-message"></div>
+    </details>
+    <button id="end-session-button" class="quiet-button">End session</button>
   </div>
+
+  <div id="summary-view" class="panel" hidden>
+    <h2 id="summary-headline"></h2>
+    <table class="totals">
+      <tr><td><span class="swatch focus"></span>Focus</td><td id="summary-focus"></td></tr>
+      <tr><td><span class="swatch detour"></span>Detours</td><td id="summary-detour"></td></tr>
+      <tr><td><span class="swatch declared"></span>Declared</td><td id="summary-declared"></td></tr>
+    </table>
+    <h3>Where detours went</h3>
+    <ul id="summary-top-detours"></ul>
+    <h3>Declared work</h3>
+    <ul id="summary-declarations"></ul>
+    <div class="button-row">
+      <button id="save-png-button">Save as PNG</button>
+      <button id="new-session-button">New session</button>
+    </div>
+  </div>
+
   <script src="../lib/p5.min.js"></script>
   <script src="../shared/rules.js"></script>
   <script src="../shared/plant.js"></script>
+  <script src="summary.js"></script>
   <script src="garden.js"></script>
 </body>
 </html>

@@ -13,3 +13,22 @@ body {
 #task-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #demo-tag { background: #2B2B2B; color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
 #time-remaining { color: #5A5A5A; white-space: nowrap; }
+.declaration-status { color: #6A1B9A; font-size: 13px; margin-bottom: 4px; }
+.welcome-back { background: #FFF8E1; border-radius: 6px; padding: 6px 8px; font-size: 13px; margin-bottom: 6px; }
+details { margin-top: 6px; font-size: 13px; }
+summary { cursor: pointer; color: #6A1B9A; font-weight: 600; }
+details input { width: 100%; box-sizing: border-box; padding: 6px; margin-top: 6px; font-size: 13px; }
+details button { margin-top: 6px; padding: 6px 12px; cursor: pointer; }
+.declare-message { color: #6A1B9A; min-height: 1em; margin-top: 4px; }
+.panel { max-width: 400px; margin: 8px auto 0; font-size: 14px; }
+.quiet-button { margin-top: 10px; background: none; border: 1px solid #BDBDBD; border-radius: 6px; padding: 5px 10px; color: #5A5A5A; cursor: pointer; }
+#summary-view h2 { font-size: 17px; color: #2E7D32; margin: 4px 0 8px; }
+#summary-view h3 { font-size: 13px; margin: 10px 0 2px; }
+#summary-view ul { margin: 0; padding-left: 18px; font-size: 13px; }
+.totals td { padding: 2px 12px 2px 0; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+.swatch.focus { background: #2E7D32; }
+.swatch.detour { background: #F9A825; }
+.swatch.declared { background: #6A1B9A; }
+.button-row { display: flex; gap: 8px; margin: 12px 0; }
+.button-row button { flex: 1; padding: 8px; cursor: pointer; }

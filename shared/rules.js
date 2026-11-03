@@ -1,4 +1,5 @@
-// shared/rules.js: constants and helper functions shared by every part of the extension.
+// shared/rules.js: constants and helper functions shared by every part of the extension:
+// state names, colors, allowlist matching, declaration checks, and segment bookkeeping.
 // Pages load it with a <script> tag; background.js will load it with importScripts.
 // It must never touch "document" (the page), because the background has no page.
 // Everything here is a plain top-level function or constant, so any file that loads it can use them.
@@ -25,6 +26,54 @@ const DEFAULT_SESSION_MINUTES = 25;
 // Demo mode runs time 10x faster. The grace period is always in real seconds.
 const DEMO_TIME_SCALE = 10;
 const GRACE_PERIOD_MS = 10 * 1000;
+
+// A declaration ("working in another app") lasts 25 session-minutes.
+const DECLARATION_SESSION_MINUTES = 25;
+// The label used when Chrome has lost focus with no active declaration.
+const OUTSIDE_CHROME_LABEL = "outside Chrome";
+
+// Real milliseconds in one session-minute: 60000 normally, 6000 in demo mode.
+function realMsPerSessionMinute(session) {
+  return 60000 / session.timeScale;
+}
+
+// The real timestamp at which the planned session length is reached.
+function plannedEndMs(session) {
+  return session.startedAt + session.plannedSessionMinutes * realMsPerSessionMinute(session);
+}
+
+// A short label for a URL: the hostname, or "file" for local files.
+function labelForUrl(url) {
+  if (url.toLowerCase().startsWith("file:")) {
+    return "file";
+  }
+  try {
+    const hostname = new URL(url).hostname;
+    if (hostname !== "") {
+      return hostname;
+    }
+  } catch (error) {
+    // Not a parseable URL; fall through to the generic label.
+  }
+  return "page";
+}
+
+// Check a declaration form. Returns a gentle message, or "" if it is fine.
+// The app name is required; the purpose needs at least 3 words, which adds
+// a moment of honest friction before leaving Chrome.
+function validateDeclaration(app, purpose) {
+  if (app.trim() === "") {
+    return "Enter the app you'll be working in.";
+  }
+  // split(/\s+/) splits on any run of spaces, like Python's str.split().
+  const words = purpose.trim().split(/\s+/).filter(function (word) {
+    return word !== "";
+  });
+  if (words.length < 3) {
+    return "Describe what you'll do there in at least 3 words.";
+  }
+  return "";
+}
 
 // Turn text into a whole number that is always the same for the same text.
 // This is the plant's "seed": same task + start time means the same plant.
@@ -124,3 +173,43 @@ function matchesAllowlist(url, allowlist) {
   }
   return false;
 }
+
+// ---- Segment bookkeeping, used by the background engine. ----
+
+// Finish the open segment at endMs and add it to the segment list.
+// Grace rule: a detour shorter than 10 real seconds is recorded as neutral.
+function closeOpenSegment(current, endMs) {
+  const open = current.open;
+  if (!open) {
+    return;
+  }
+  let kind = open.kind;
+  const durationMs = endMs - open.start;
+  if (kind === STATE_DETOUR && durationMs < GRACE_PERIOD_MS) {
+    kind = STATE_NEUTRAL;
+  }
+  if (durationMs > 0) {
+    current.segments.push({ kind: kind, start: open.start, end: endMs, label: open.label });
+  }
+  current.open = null;
+}
+
+// Close the open segment and start a new one at the same moment.
+function switchTo(current, kind, label, atMs) {
+  const open = current.open;
+  // Coming back to Chrome after real (10s+) undeclared time outside it:
+  // remember when, so the garden can show its gentle welcome-back message.
+  if (open && open.kind === STATE_DETOUR && open.label === OUTSIDE_CHROME_LABEL &&
+      atMs - open.start >= GRACE_PERIOD_MS && label !== OUTSIDE_CHROME_LABEL) {
+    current.welcomeBackAt = atMs;
+  }
+  closeOpenSegment(current, atMs);
+  current.open = { kind: kind, start: atMs, label: label };
+}
+
+// Mark the session as finished at endMs. 
+function endSession(current, endMs) {
+  closeOpenSegment(current, endMs);
+  current.endedAt = endMs;
+}
+

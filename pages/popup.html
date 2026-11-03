@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <!--
   popup.html: the small panel that opens when you click the toolbar icon.
-  It links to the setup screen and the garden window.
+  Links to setup, the garden, and the debug view, plus the
+  "Working in another app" declaration form.
   Chrome forbids inline <script> code in extensions, so all logic lives in popup.js.
 -->
 <html lang="en">
@@ -9,9 +10,12 @@
   <meta charset="utf-8">
   <title>Focus Garden</title>
   <style>
-    body { font-family: system-ui, sans-serif; width: 220px; padding: 12px; margin: 0; }
+    body { font-family: system-ui, sans-serif; width: 240px; padding: 12px; margin: 0; }
     h1 { font-size: 16px; margin: 0 0 10px 0; color: #2E7D32; }
+    h2 { font-size: 13px; margin: 12px 0 6px 0; }
     button { width: 100%; padding: 8px; font-size: 14px; cursor: pointer; margin-bottom: 6px; }
+    input { width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 6px; font-size: 13px; }
+    .message { font-size: 12px; color: #6A1B9A; min-height: 1em; }
   </style>
 </head>
 <body>
@@ -19,6 +23,14 @@
   <button id="new-session-button">New session</button>
   <button id="open-garden-button">Open garden</button>
   <button id="debug-button">Engine debug</button>
+
+  <h2>Working in another app</h2>
+  <input id="declare-app-input" type="text" placeholder="App (e.g. VS Code)">
+  <input id="declare-purpose-input" type="text" placeholder="What you'll do there (3+ words)">
+  <button id="declare-button">Declare</button>
+  <div id="declare-message" class="message"></div>
+
+  <script src="../shared/rules.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

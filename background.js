@@ -37,60 +37,21 @@ async function saveCurrent(current) {
   await chrome.storage.local.set({ current: current });
 }
 
-// Real milliseconds in one session-minute: 60000 normally, 6000 in demo mode.
-function realMsPerSessionMinute(current) {
-  return 60000 / current.timeScale;
-}
-
-// The real timestamp at which the planned session length is reached.
-function plannedEndMs(current) {
-  return current.startedAt + current.plannedSessionMinutes * realMsPerSessionMinute(current);
-}
-
-// A short label for a URL: the hostname, or "file" for local files.
-function labelForUrl(url) {
-  if (url.toLowerCase().startsWith("file:")) {
-    return "file";
+// End the session at endMs, save it, and add a copy to the history list
+// (newest first, at most 50). Checking the id means it is never added twice.
+async function finishSession(current, endMs) {
+  endSession(current, endMs);
+  await saveCurrent(current);
+  const stored = await chrome.storage.local.get("history");
+  let history = stored.history || [];
+  const alreadySaved = history.some(function (past) {
+    return past.id === current.id; // like Python's any(...)
+  });
+  if (!alreadySaved) {
+    history.unshift(current); // unshift adds to the front, like list.insert(0, x)
+    history = history.slice(0, 50);
+    await chrome.storage.local.set({ history: history });
   }
-  try {
-    const hostname = new URL(url).hostname;
-    if (hostname !== "") {
-      return hostname;
-    }
-  } catch (error) {
-    // Not a parseable URL; fall through to the generic label.
-  }
-  return "page";
-}
-
-// Finish the open segment at endMs and add it to the segment list.
-// Grace rule: a detour shorter than 10 real seconds is recorded as neutral.
-function closeOpenSegment(current, endMs) {
-  const open = current.open;
-  if (!open) {
-    return;
-  }
-  let kind = open.kind;
-  const durationMs = endMs - open.start;
-  if (kind === STATE_DETOUR && durationMs < GRACE_PERIOD_MS) {
-    kind = STATE_NEUTRAL;
-  }
-  if (durationMs > 0) {
-    current.segments.push({ kind: kind, start: open.start, end: endMs, label: open.label });
-  }
-  current.open = null;
-}
-
-// Close the open segment and start a new one at the same moment.
-function switchTo(current, kind, label, atMs) {
-  closeOpenSegment(current, atMs);
-  current.open = { kind: kind, start: atMs, label: label };
-}
-
-// Mark the session as finished at endMs. (Stage 5 adds the summary and history.)
-function endSession(current, endMs) {
-  closeOpenSegment(current, endMs);
-  current.endedAt = endMs;
 }
 
 // Look at Chrome right now and decide the state. Returns { kind, label }.
@@ -122,7 +83,7 @@ async function computeState(current, nowMs) {
     if (declaration && nowMs < declaration.expiresAt) {
       return { kind: STATE_DECLARED, label: declaration.app };
     }
-    return { kind: STATE_DETOUR, label: "outside Chrome" };
+    return { kind: STATE_DETOUR, label: OUTSIDE_CHROME_LABEL };
   }
   if (focusedWindow.type === "devtools") {
     return { kind: STATE_NEUTRAL, label: "devtools" };
@@ -191,8 +152,7 @@ async function evaluate() {
   // check runs a few seconds late (alarms only fire every 30 seconds).
   const endMs = plannedEndMs(current);
   if (nowMs >= endMs) {
-    endSession(current, endMs);
-    await saveCurrent(current);
+    await finishSession(current, endMs);
     await updateBadge(current, nowMs);
     return;
   }
@@ -201,7 +161,7 @@ async function evaluate() {
   const declaration = current.declaration;
   if (declaration && nowMs >= declaration.expiresAt) {
     if (current.open && current.open.kind === STATE_DECLARED) {
-      switchTo(current, STATE_DETOUR, "outside Chrome", declaration.expiresAt);
+      switchTo(current, STATE_DETOUR, OUTSIDE_CHROME_LABEL, declaration.expiresAt);
     }
     current.declaration = null;
   }
@@ -259,11 +219,47 @@ chrome.alarms.onAlarm.addListener(function (alarm) {
   }
 });
 
-// Pages send { type: "evaluate" } when something changes (e.g. a session starts).
-chrome.runtime.onMessage.addListener(function (message) {
+// Record a declaration (behavior rule 4). Pages ask the background to do this,
+// so the save is queued with every other save and none overwrite each other.
+async function declare(app, purpose) {
+  const nowMs = Date.now();
+  const current = await loadCurrent();
+  if (!current || current.endedAt) {
+    return;
+  }
+  const expiresAt = nowMs + DECLARATION_SESSION_MINUTES * realMsPerSessionMinute(current);
+  current.declaration = { app: app, purpose: purpose, expiresAt: expiresAt };
+  // Keep every declaration for the summary, since "declaration" is cleared on expiry.
+  if (!current.declarationLog) {
+    current.declarationLog = [];
+  }
+  current.declarationLog.push({ app: app, purpose: purpose, madeAt: nowMs });
+  await saveCurrent(current);
+}
+
+// Pages send { type: "evaluate" } when something changes (e.g. a session starts),
+// and { type: "declare", app, purpose } from the declaration forms.
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+  if (message && message.type === "declare") {
+    runInOrder(function () {
+      return declare(message.app, message.purpose);
+    });
+    runInOrder(evaluate);
+  }
   if (message && message.type === "evaluate") {
     runInOrder(evaluate);
   }
+  // The garden's "End session" button: end now. The plant is kept.
+  if (message && message.type === "end-session") {
+    runInOrder(async function () {
+      const current = await loadCurrent();
+      if (current && !current.endedAt) {
+        await finishSession(current, Math.min(Date.now(), plannedEndMs(current)));
+        await updateBadge(current, Date.now());
+      }
+    });
+  }
+  sendResponse({ received: true }); // reply right away so the page's call finishes cleanly
 });
 
 // When Chrome itself starts, a session left open from last time is ended at
@@ -272,8 +268,7 @@ chrome.runtime.onStartup.addListener(function () {
   runInOrder(async function () {
     const current = await loadCurrent();
     if (current && !current.endedAt) {
-      endSession(current, current.lastHeartbeat);
-      await saveCurrent(current);
+      await finishSession(current, current.lastHeartbeat);
     }
     await updateBadge(current, Date.now());
   });
@@ -284,6 +279,6 @@ chrome.runtime.onInstalled.addListener(function () {
 });
 
 // Printed every time Chrome starts this worker, so the console shows which version is running.
-console.log("Focus Garden engine loaded (Stage 2).");
+console.log("Focus Garden engine loaded (Stage 5).");
 ensureHeartbeatAlarm();
 runInOrder(evaluate); // check the state right away whenever the worker starts

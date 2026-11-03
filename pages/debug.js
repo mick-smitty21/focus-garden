@@ -44,12 +44,12 @@ function render() {
   }
 
   const nowMs = Date.now();
-  const realMsPerSessionMinute = 60000 / session.timeScale;
+  const msPerSessionMinute = 60000 / session.timeScale;
   let referenceMs = nowMs;
   if (session.endedAt) {
     referenceMs = session.endedAt;
   }
-  const elapsedSessionMinutes = (referenceMs - session.startedAt) / realMsPerSessionMinute;
+  const elapsedSessionMinutes = (referenceMs - session.startedAt) / msPerSessionMinute;
   const remainingMinutes = Math.max(0, session.plannedSessionMinutes - elapsedSessionMinutes);
 
   let stateText = "ended at " + clockTime(session.endedAt || nowMs);
