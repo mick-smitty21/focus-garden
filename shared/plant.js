@@ -1,4 +1,5 @@
 // shared/plant.js: drawPlant(p, session, nowMs, options) draws one plant with p5.
+// Needs shared/rules.js and shared/variation.js loaded first.
 // The plant is rebuilt from scratch from the session's segments on every call,
 // using the session's seed for all randomness, so the same segments always give
 // the same plant: live, in the summary, and in the gallery.
@@ -6,14 +7,9 @@
 const PLANT_COLORS = {
   skyTop: "#E3F2FD",
   skyBottom: "#F1F8E9",
-  stem: "#3B7D3A",
   declared: "#6A1B9A",
   knot: "#D7CCC8",       // light bark fill: a growth node, not a dark lump
   knotRing: "#8D6E63",   // darker bark outline
-  leaf: "#66BB6A",
-  leafVein: "#2E7D32",
-  petal: "#F48FB1",
-  flowerCenter: "#FBC02D",
   pot: "#B5651D",
   potRim: "#8D4A16"
 };
@@ -53,6 +49,7 @@ function collectSegments(session, nowMs) {
 // and flower goes. Draws nothing; returns plain data (lists of dicts).
 function buildPlant(p, session, nowMs, width, height) {
   p.randomSeed(session.seed); // same seed, same "random" numbers, every time
+  const traits = getPlantTraits(session.seed);
   const realMsPerMinute = 60000 / session.timeScale;
   const potTopY = height * 0.9;
   const pixelsPerFocusMinute = 0.85 * height / session.plannedSessionMinutes;
@@ -104,6 +101,7 @@ function buildPlant(p, session, nowMs, width, height) {
       // Small seeded wobble, then a slow pull back toward straight up,
       // so a kink stays visible for a while before the stem straightens.
       angle = angle + p.random(-0.05, 0.05) * stepFraction;
+      angle = angle + traits.curvature * 0.006 * stepFraction; // this plant's lean
       angle = angle + (-Math.PI / 2 - angle) * 0.025 * stepFraction;
 
       x = x + Math.cos(angle) * pixelsPerMinute * stepMinutes;
@@ -166,29 +164,15 @@ function drawPot(p, width, height, potTopY, scale) {
   p.rect(centerX - 34 * scale, potTopY - 4 * scale, 68 * scale, 9 * scale, 3 * scale);
 }
 
-function drawLeaf(p, point, side, grown, scale) {
-  const leafLength = 26 * scale * grown;
-  p.push(); // save drawing settings, like entering a "with" block
-  p.translate(point.x, point.y);
-  p.rotate(-Math.PI / 2 + side * Math.PI / 3); // tilt up and out to one side
-  p.noStroke();
-  p.fill(PLANT_COLORS.leaf);
-  p.ellipse(leafLength / 2, 0, leafLength, leafLength * 0.45);
-  p.stroke(PLANT_COLORS.leafVein);
-  p.strokeWeight(1);
-  p.line(0, 0, leafLength * 0.85, 0);
-  p.pop(); // restore settings
-}
-
-function drawFlower(p, point, grown, scale) {
+function drawFlower(p, point, grown, scale, palette) {
   const petalSize = 14 * scale * grown;
   p.noStroke();
-  p.fill(PLANT_COLORS.petal);
+  p.fill(palette.petal);
   for (let petal = 0; petal < 5; petal = petal + 1) {
     const petalAngle = petal * Math.PI * 2 / 5;
     p.circle(point.x + Math.cos(petalAngle) * petalSize * 0.7, point.y + Math.sin(petalAngle) * petalSize * 0.7, petalSize);
   }
-  p.fill(PLANT_COLORS.flowerCenter);
+  p.fill(palette.center);
   p.circle(point.x, point.y, petalSize * 0.7);
 }
 
@@ -228,6 +212,7 @@ function drawPlant(p, session, nowMs, options) {
   const height = options.height;
   const scale = height / 560; // sizes are designed for a 560-pixel-tall canvas
   const plant = buildPlant(p, session, nowMs, width, height);
+  const traits = getPlantTraits(session.seed);
   p.noiseSeed(session.seed);
 
   // Display positions: the built points plus sway. Sway is only an offset for
@@ -237,7 +222,7 @@ function drawPlant(p, session, nowMs, options) {
     let offsetX = 0;
     if (options.animate) {
       const heightFraction = (plant.potTopY - point.y) / plant.potTopY;
-      offsetX = (p.noise(point.y * 0.01, p.frameCount * 0.008) - 0.5) * 18 * scale * heightFraction;
+      offsetX = (p.noise(point.y * 0.01, p.frameCount * 0.008) - 0.5) * 18 * scale * heightFraction * traits.swayAmplitude;
     }
     shown.push({ x: point.x + offsetX, y: point.y, kind: point.kind });
   }
@@ -253,14 +238,14 @@ function drawPlant(p, session, nowMs, options) {
     if (to.kind === STATE_DECLARED) {
       p.stroke(PLANT_COLORS.declared);
     } else {
-      p.stroke(PLANT_COLORS.stem);
+      p.stroke(traits.foliage.stem);
     }
     p.line(from.x, from.y, to.x, to.y);
   }
   drawDeclaredDashes(p, shown, scale);
 
   for (const leaf of plant.leaves) {
-    drawLeaf(p, shown[leaf.pointIndex], leaf.side, growScale(leaf.bornAt, nowMs, options.animate), scale);
+    drawLeaf(p, shown[leaf.pointIndex], leaf.side, growScale(leaf.bornAt, nowMs, options.animate), scale, traits.leafShape, traits.foliage);
   }
   p.fill(PLANT_COLORS.knot);
   p.stroke(PLANT_COLORS.knotRing);
@@ -270,7 +255,7 @@ function drawPlant(p, session, nowMs, options) {
     p.circle(point.x, point.y, knot.radius * 2 * scale);
   }
   for (const flower of plant.flowers) {
-    drawFlower(p, shown[flower.pointIndex], growScale(flower.bornAt, nowMs, options.animate), scale);
+    drawFlower(p, shown[flower.pointIndex], growScale(flower.bornAt, nowMs, options.animate), scale, traits.palette);
   }
   drawPot(p, width, height, plant.potTopY, scale);
 }

@@ -6,6 +6,7 @@
 const newSessionButton = document.getElementById("new-session-button");
 const openGardenButton = document.getElementById("open-garden-button");
 const debugButton = document.getElementById("debug-button");
+const galleryButton = document.getElementById("gallery-button");
 const declareAppInput = document.getElementById("declare-app-input");
 const declarePurposeInput = document.getElementById("declare-purpose-input");
 const declareButton = document.getElementById("declare-button");
@@ -24,6 +25,11 @@ openGardenButton.addEventListener("click", function () {
     width: 420,
     height: 680
   });
+  window.close();
+});
+
+galleryButton.addEventListener("click", function () {
+  chrome.tabs.create({ url: chrome.runtime.getURL("pages/gallery.html") });
   window.close();
 });
 

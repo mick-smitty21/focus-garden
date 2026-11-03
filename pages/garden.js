@@ -23,8 +23,13 @@ const declareMessage = document.getElementById("declare-message");
 const endSessionButton = document.getElementById("end-session-button");
 const savePngButton = document.getElementById("save-png-button");
 const newSessionButton = document.getElementById("new-session-button");
+const galleryButton = document.getElementById("gallery-button");
 
-let session = null;                 // latest copy of "current" from storage (display only)
+// If the address ends in ?session=<id>, show that past session from history
+// instead of the current one. URLSearchParams reads the part after "?".
+const viewedSessionId = new URLSearchParams(window.location.search).get("session");
+
+let session = null;                 // the session being shown (display only)
 let endCheckRequestedFor = null;    // id of the session we already nudged to end
 let expiryCheckRequestedFor = null; // expiresAt of the declaration we already nudged
 let summaryRenderedFor = null;      // id of the session whose summary text is filled in
@@ -136,13 +141,23 @@ async function submitDeclaration() {
 }
 
 async function loadSession() {
-  const stored = await chrome.storage.local.get("current");
-  session = stored.current || null;
+  if (viewedSessionId) {
+    const stored = await chrome.storage.local.get("history");
+    const history = stored.history || [];
+    // find returns the first match or undefined, like next((s for s in history if ...), None)
+    session = history.find(function (pastSession) {
+      return pastSession.id === viewedSessionId;
+    }) || null;
+  } else {
+    const stored = await chrome.storage.local.get("current");
+    session = stored.current || null;
+  }
   updateInfo();
 }
 
 chrome.storage.onChanged.addListener(function (changes, areaName) {
-  if (areaName === "local" && changes.current) {
+  // A past session never changes, so only follow "current" in the normal view.
+  if (!viewedSessionId && areaName === "local" && changes.current) {
     session = changes.current.newValue || null;
     updateInfo();
   }
@@ -186,6 +201,9 @@ savePngButton.addEventListener("click", function () {
 });
 newSessionButton.addEventListener("click", function () {
   chrome.tabs.create({ url: chrome.runtime.getURL("pages/setup.html") });
+});
+galleryButton.addEventListener("click", function () {
+  chrome.tabs.create({ url: chrome.runtime.getURL("pages/gallery.html") });
 });
 
 setInterval(updateInfo, 1000); // refresh the countdown once a second

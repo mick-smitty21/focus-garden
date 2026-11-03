@@ -32,3 +32,4 @@ details button { margin-top: 6px; padding: 6px 12px; cursor: pointer; }
 .swatch.declared { background: #6A1B9A; }
 .button-row { display: flex; gap: 8px; margin: 12px 0; }
 .button-row button { flex: 1; padding: 8px; cursor: pointer; }
+.traits { color: #5A5A5A; font-size: 13px; margin: -4px 0 8px; }

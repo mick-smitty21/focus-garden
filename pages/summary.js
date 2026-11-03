@@ -63,6 +63,9 @@ function summaryHeadline(summary) {
 function renderSummary(session) {
   const summary = computeSummary(session);
   document.getElementById("summary-headline").textContent = summaryHeadline(summary);
+  const traits = getPlantTraits(session.seed); // from shared/variation.js
+  document.getElementById("summary-traits").textContent =
+    "This plant: " + traits.palette.name + " flowers, " + traits.foliage.name + " greens, " + traits.leafShape + " leaves.";
   document.getElementById("summary-focus").textContent = formatMinutes(summary.focusMinutes) + " min";
   document.getElementById("summary-detour").textContent = formatMinutes(summary.detourMinutes) + " min";
   document.getElementById("summary-declared").textContent = formatMinutes(summary.declaredMinutes) + " min";

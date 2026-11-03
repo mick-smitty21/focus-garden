@@ -38,6 +38,7 @@
 
   <div id="summary-view" class="panel" hidden>
     <h2 id="summary-headline"></h2>
+    <p id="summary-traits" class="traits"></p>
     <table class="totals">
       <tr><td><span class="swatch focus"></span>Focus</td><td id="summary-focus"></td></tr>
       <tr><td><span class="swatch detour"></span>Detours</td><td id="summary-detour"></td></tr>
@@ -49,12 +50,14 @@
     <ul id="summary-declarations"></ul>
     <div class="button-row">
       <button id="save-png-button">Save as PNG</button>
+      <button id="gallery-button">Gallery</button>
       <button id="new-session-button">New session</button>
     </div>
   </div>
 
   <script src="../lib/p5.min.js"></script>
   <script src="../shared/rules.js"></script>
+  <script src="../shared/variation.js"></script>
   <script src="../shared/plant.js"></script>
   <script src="summary.js"></script>
   <script src="garden.js"></script>
