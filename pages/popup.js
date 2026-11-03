@@ -1,14 +1,22 @@
 // popup.js: behavior for the toolbar popup.
-// When the "Open garden" button is clicked, open garden.html in a new tab.
+// "New session" opens the setup screen in a tab.
+// "Open garden" opens the garden in a small separate window.
 
-// document.getElementById finds one HTML element by its id, like a dict lookup by key.
+const newSessionButton = document.getElementById("new-session-button");
 const openGardenButton = document.getElementById("open-garden-button");
 
-// Register a function to run when the button is clicked (a callback).
-openGardenButton.addEventListener("click", function () {
-  // chrome.runtime.getURL turns a path inside the extension into a full
-  // chrome-extension://<id>/pages/garden.html address.
-  const gardenUrl = chrome.runtime.getURL("pages/garden.html");
-  chrome.tabs.create({ url: gardenUrl });
+newSessionButton.addEventListener("click", function () {
+  // chrome.runtime.getURL turns a path inside the extension into a full address.
+  chrome.tabs.create({ url: chrome.runtime.getURL("pages/setup.html") });
   window.close(); // close the popup so it doesn't linger
+});
+
+openGardenButton.addEventListener("click", function () {
+  chrome.windows.create({
+    url: chrome.runtime.getURL("pages/garden.html"),
+    type: "popup",
+    width: 420,
+    height: 680
+  });
+  window.close();
 });

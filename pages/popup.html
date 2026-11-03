@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   popup.html: the small panel that opens when you click the toolbar icon.
-  Stage 0 has one button that opens the garden page in a new tab.
+  It links to the setup screen and the garden window.
   Chrome forbids inline <script> code in extensions, so all logic lives in popup.js.
 -->
 <html lang="en">
@@ -11,11 +11,12 @@
   <style>
     body { font-family: system-ui, sans-serif; width: 220px; padding: 12px; margin: 0; }
     h1 { font-size: 16px; margin: 0 0 10px 0; color: #2E7D32; }
-    button { width: 100%; padding: 8px; font-size: 14px; cursor: pointer; }
+    button { width: 100%; padding: 8px; font-size: 14px; cursor: pointer; margin-bottom: 6px; }
   </style>
 </head>
 <body>
   <h1>Focus Garden</h1>
+  <button id="new-session-button">New session</button>
   <button id="open-garden-button">Open garden</button>
   <script src="popup.js"></script>
 </body>

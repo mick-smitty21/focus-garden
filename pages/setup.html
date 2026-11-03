@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--
+  setup.html: the screen where a session is planned before it starts.
+  You name the task, build the allowlist (sites and files the task needs),
+  pick a session length and demo mode, then press Start session.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Focus Garden: set up a session</title>
+  <link rel="stylesheet" href="setup.css">
+</head>
+<body>
+  <main>
+    <h1>Plan a focus session</h1>
+
+    <section>
+      <label for="task-input">What are you working on?</label>
+      <input id="task-input" type="text" placeholder="e.g. CSE 170 lab report">
+    </section>
+
+    <section>
+      <h2>Allowlist</h2>
+      <p class="hint">Sites and files this task needs. Time on these grows your plant.</p>
+      <div class="row">
+        <input id="entry-input" type="text" placeholder="docs.google.com, *.instructure.com, or a file path">
+        <button id="add-entry-button">Add</button>
+      </div>
+      <p id="entry-message" class="message"></p>
+      <ul id="allowlist-list"></ul>
+
+      <button id="show-tabs-button">Add from open tabs</button>
+      <div id="open-tabs-panel" hidden>
+        <ul id="open-tabs-list"></ul>
+        <button id="add-selected-tabs-button">Add selected</button>
+      </div>
+
+      <p class="hint">
+        For local files: on chrome://extensions, click Details on Focus Garden and turn on "Allow access to file URLs".
+        <button id="open-details-button" class="link-button">Open details</button>
+        <span id="file-access-status"></span>
+      </p>
+    </section>
+
+    <section>
+      <label for="minutes-input">Session length (minutes, 15 to 180)</label>
+      <input id="minutes-input" type="number" min="15" max="180" step="5">
+      <label class="checkbox-label">
+        <input id="demo-checkbox" type="checkbox"> Demo mode (10x speed)
+      </label>
+    </section>
+
+    <button id="start-button" class="primary">Start session</button>
+    <p id="start-message" class="message"></p>
+  </main>
+
+  <script src="../shared/rules.js"></script>
+  <script src="setup.js"></script>
+</body>
+</html>
