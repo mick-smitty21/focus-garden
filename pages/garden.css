@@ -1,12 +1,15 @@
-/* garden.css: layout and colors for the garden page.
-   Keeps the canvas centered with a calm background. */
+/* garden.css: layout for the garden window (about 420 x 680).
+   The canvas on top, two short status rows under it. */
 body {
   font-family: system-ui, sans-serif;
   background: #F4F1EA;
   color: #2B2B2B;
   margin: 0;
-  padding: 16px;
-  text-align: center;
+  padding: 8px;
 }
-h1 { font-size: 20px; color: #2E7D32; margin: 0 0 12px 0; }
-#garden-canvas { display: inline-block; }
+#garden-canvas canvas { display: block; margin: 0 auto; border-radius: 8px; }
+#info { max-width: 400px; margin: 8px auto 0; font-size: 14px; }
+.info-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+#task-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#demo-tag { background: #2B2B2B; color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+#time-remaining { color: #5A5A5A; white-space: nowrap; }

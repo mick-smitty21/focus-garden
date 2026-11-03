@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <!--
-  garden.html: the page where the plant is drawn.
-  It loads p5.js from the local lib folder (never from the internet),
-  then garden.js, which creates a p5 sketch inside the #garden-canvas div.
+  garden.html: the live garden window that sits beside your work.
+  Loads p5.js (local), the shared rules and plant code, then garden.js,
+  which draws the plant and the status lines under it.
 -->
 <html lang="en">
 <head>
@@ -11,9 +11,20 @@
   <link rel="stylesheet" href="garden.css">
 </head>
 <body>
-  <h1>Focus Garden</h1>
   <div id="garden-canvas"></div>
+  <div id="info">
+    <div class="info-row">
+      <span id="task-name"></span>
+      <span id="demo-tag" hidden>DEMO MODE 10x</span>
+    </div>
+    <div class="info-row">
+      <span id="state-words"></span>
+      <span id="time-remaining"></span>
+    </div>
+  </div>
   <script src="../lib/p5.min.js"></script>
+  <script src="../shared/rules.js"></script>
+  <script src="../shared/plant.js"></script>
   <script src="garden.js"></script>
 </body>
 </html>

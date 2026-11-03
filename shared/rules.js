@@ -88,6 +88,14 @@ function entryFromUrl(url) {
   return null; // chrome:// pages, the extension's own pages, etc.
 }
 
+// Remove a leading "www." so youtube.com and www.youtube.com compare equal.
+function withoutWww(hostname) {
+  if (hostname.startsWith("www.")) {
+    return hostname.slice(4);
+  }
+  return hostname;
+}
+
 // True if a URL matches any allowlist entry. Matching ignores upper/lower case.
 function matchesAllowlist(url, allowlist) {
   const lowerUrl = url.toLowerCase();
@@ -109,7 +117,8 @@ function matchesAllowlist(url, allowlist) {
       if (hostname === baseDomain || hostname.endsWith("." + baseDomain)) {
         return true;
       }
-    } else if (hostname === lowerEntry) {
+    } else if (withoutWww(hostname) === withoutWww(lowerEntry)) {
+      // "youtube.com" and "www.youtube.com" count as the same site.
       return true;
     }
   }
